@@ -1,0 +1,679 @@
+<title>CakeNow!+</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Martian+Mono:wght@400;500&family=Shrikhand&display=swap">
+<style>
+/* Layout: the live jelly is the home screen (full-bleed stage, copy on the left), then menu, how to order, info; cart is a side drawer. */
+:root {
+  --bg: #f2f0f5;
+  --surface: #ffffff;
+  --surface-2: #e9e5ee;
+  --ink: #23162a;
+  --ink-soft: #5d5064;
+  --line: #d9d2df;
+  --accent: #d4124a;
+  --accent-ink: #ffffff;
+  --ok: #1d7a4f;
+  --stage-top: #eeeaf3;
+  --stage-bottom: #d8d1e1;
+  --table: #e2dce9;
+  --plate: #fbfaf9;
+  --shadow: 0 18px 40px -22px rgba(35, 22, 42, 0.35);
+  --font-display: "Shrikhand", "Cooper Black", Georgia, serif;
+  --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Martian Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius: 14px;
+  --gutter: clamp(16px, 4vw, 44px);
+  --edge: max(var(--gutter), calc((100vw - 1240px) / 2 + var(--gutter)));
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #160f19; --surface: #211826; --surface-2: #2b2131; --ink: #f5eef6; --ink-soft: #b9abbe; --line: #3b3041;
+    --accent: #ff4d7d; --accent-ink: #1a0d14; --ok: #5fd39b;
+    --stage-top: #2a2031; --stage-bottom: #110c14; --table: #1d1621; --plate: #d9d4dd;
+    --shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.7);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #160f19; --surface: #211826; --surface-2: #2b2131; --ink: #f5eef6; --ink-soft: #b9abbe; --line: #3b3041;
+  --accent: #ff4d7d; --accent-ink: #1a0d14; --ok: #5fd39b;
+  --stage-top: #2a2031; --stage-bottom: #110c14; --table: #1d1621; --plate: #d9d4dd;
+  --shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.7);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 16px/1.55 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+button, a, input, select, textarea, label { touch-action: manipulation; }
+a { color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2.5px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+.wrap { max-width: 1240px; margin-inline: auto; padding-inline: var(--gutter); }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font: 500 11px/1.4 var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30;
+  background: color-mix(in srgb, var(--bg) 84%, transparent);
+  backdrop-filter: saturate(1.4) blur(12px);
+  -webkit-backdrop-filter: saturate(1.4) blur(12px);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+}
+.topbar .wrap { display: flex; align-items: center; gap: 24px; min-height: 64px; }
+.logo { font: 400 26px/1 var(--font-display); text-decoration: none; letter-spacing: 0.01em; white-space: nowrap; }
+.logo sup { font-size: 0.62em; color: var(--accent); margin-left: 1px; transition: color .4s; }
+.nav { display: flex; gap: 22px; margin-left: auto; }
+.nav a { text-decoration: none; font-weight: 500; color: var(--ink-soft); font-size: 15px; }
+.nav a:hover { color: var(--ink); }
+.cart-btn {
+  display: inline-flex; align-items: center; gap: 10px; border: 0; cursor: pointer;
+  background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 15px;
+  transition: transform .15s ease;
+}
+.cart-btn:active { transform: scale(0.97); }
+.cart-count {
+  min-width: 22px; height: 22px; border-radius: 999px; padding: 0 6px; display: inline-grid; place-items: center;
+  background: var(--accent); color: var(--accent-ink); font: 500 12px/1 var(--font-mono);
+}
+.cart-btn.bump .cart-count { animation: bump .4s cubic-bezier(.3,1.6,.5,1); }
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+
+/* ---------- hero / stage ---------- */
+.hero { position: relative; }
+.stage {
+  position: relative; height: clamp(560px, 86vh, 820px); overflow: hidden;
+  background: linear-gradient(var(--stage-top), var(--stage-bottom));
+}
+.stage canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; cursor: grab;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+}
+.dock, .flavor-card, .readout { -webkit-user-select: none; user-select: none; }
+@supports (height: 1svh) { .stage { height: clamp(560px, 86svh, 820px); } }
+.stage canvas[data-tool="hand"][data-state="grabbing"] { cursor: grabbing; }
+.stage canvas[data-tool="knife"] { cursor: crosshair; }
+.stage canvas[data-tool="spoon"], .stage canvas[data-tool="tap"] { cursor: pointer; }
+.hero-copy {
+  position: absolute; z-index: 2; left: var(--edge); top: 44%; transform: translateY(-50%);
+  width: min(30rem, 42vw); pointer-events: none;
+}
+.hero-copy > * { pointer-events: auto; }
+.hero-copy h1 {
+  font: 400 clamp(46px, 6.4vw, 92px)/0.94 var(--font-display);
+  letter-spacing: -0.01em; margin: 14px 0 18px;
+}
+.hero-copy h1 em { font-style: normal; color: var(--accent); transition: color .4s; }
+.hero-copy p.lead { font-size: 18px; color: var(--ink-soft); max-width: 27rem; margin: 0 0 26px; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;
+  border-radius: 999px; padding: 13px 22px; font-weight: 600; text-decoration: none; border: 1.5px solid transparent;
+  transition: transform .15s ease, background-color .2s, border-color .2s;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--accent); color: var(--accent-ink); }
+.btn-ghost { border-color: var(--ink); color: var(--ink); background: transparent; }
+.btn-ghost:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+
+/* product tied to the flavour on the plate */
+.flavor-card {
+  position: absolute; z-index: 2; right: var(--edge); top: 26px; width: 300px;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow);
+  display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center;
+}
+.flavor-card .eyebrow { grid-column: 1 / -1; }
+.flavor-card h3 { font-size: 17px; font-weight: 700; }
+.flavor-card .meta { font-size: 13px; color: var(--ink-soft); }
+.flavor-card .price { font: 500 15px var(--font-mono); text-align: right; }
+.flavor-card .btn { grid-column: 1 / -1; padding: 9px 14px; font-size: 14px; margin-top: 8px; }
+
+.dock {
+  position: absolute; z-index: 3; right: var(--edge); bottom: 22px;
+  display: flex; flex-direction: column; gap: 10px; align-items: stretch; width: min(560px, calc(100% - 2 * var(--gutter)));
+}
+.dock-panel {
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 1px solid var(--line); border-radius: 18px; padding: 8px; box-shadow: var(--shadow);
+  display: grid; gap: 6px; min-width: 0;
+}
+.dock-row { display: flex; gap: 10px; align-items: stretch; }
+.tools, .flavors { display: flex; gap: 4px; }
+.tools { flex: 1; }
+.dessert-strip {
+  display: flex; gap: 4px; overflow-x: auto; scrollbar-width: thin; padding: 6px 0 4px;
+  border-top: 1px solid var(--line); min-width: 0; scroll-snap-type: x proximity;
+}
+.dessert {
+  flex: none; border: 1.5px solid transparent; background: transparent; cursor: pointer; border-radius: 999px;
+  padding: 5px 12px 5px 6px; display: inline-flex; gap: 7px; align-items: center; font-size: 13px; font-weight: 600;
+  color: var(--ink-soft); white-space: nowrap; scroll-snap-align: start; transition: background-color .15s, color .15s, transform .12s;
+}
+.dessert:active, .topping:active { transform: scale(0.96); }
+.dessert .swatch, .topping .swatch { width: 18px; height: 18px; border-radius: 50%; background: var(--sw); box-shadow: inset 0 -3px 5px rgba(0,0,0,.2), inset 0 2px 3px rgba(255,255,255,.5); flex: none; }
+.dessert:hover { background: var(--surface-2); color: var(--ink); }
+.dessert[aria-checked="true"] { background: var(--ink); color: var(--bg); }
+.options-row { display: flex; gap: 10px; align-items: center; border-top: 1px solid var(--line); padding-top: 6px; flex-wrap: wrap; }
+.options-row .flavors { flex: 1 1 auto; }
+.toppings { display: flex; gap: 6px; align-items: center; margin-left: auto; flex-wrap: wrap; }
+.opt-label { font: 500 10px/1.4 var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
+.topping {
+  border: 1.5px solid var(--line); background: transparent; cursor: pointer; border-radius: 999px; padding: 5px 12px 5px 6px;
+  display: inline-flex; gap: 7px; align-items: center; font-size: 13px; font-weight: 600; color: var(--ink-soft);
+  transition: background-color .15s, color .15s, border-color .15s, transform .12s;
+}
+.topping:hover { border-color: var(--ink-soft); color: var(--ink); }
+.topping[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.flavor { flex: none; }
+.tool, .flavor {
+  flex: 1; border: 0; background: transparent; cursor: pointer; border-radius: 12px; padding: 7px 4px 6px;
+  display: grid; justify-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: var(--ink-soft);
+  transition: background-color .15s, color .15s, transform .12s;
+}
+.tool:active, .flavor:active { transform: scale(0.95); }
+.tool svg { width: 24px; height: 24px; }
+.tool[aria-checked="true"] { background: var(--ink); color: var(--bg); }
+.tool:not([aria-checked="true"]):hover, .flavor:not([aria-checked="true"]):hover { background: var(--surface-2); color: var(--ink); }
+.flavor .swatch { width: 20px; height: 20px; border-radius: 50%; background: var(--sw); box-shadow: inset 0 -3px 6px rgba(0,0,0,.18), inset 0 2px 3px rgba(255,255,255,.55); }
+.flavor[aria-checked="true"] { color: var(--ink); background: var(--surface-2); }
+.flavor[aria-checked="true"] .swatch { outline: 2px solid var(--ink); outline-offset: 2px; }
+.settings-btn { border: 0; background: transparent; cursor: pointer; border-radius: 12px; padding: 0 12px; color: var(--ink-soft); }
+.settings-btn:hover, .settings-btn[aria-expanded="true"] { color: var(--ink); background: var(--surface-2); }
+.min-btn { border: 0; background: transparent; cursor: pointer; border-radius: 12px; padding: 0 10px; color: var(--ink-soft); order: 3; }
+.min-btn:hover { color: var(--ink); background: var(--surface-2); }
+.min-btn svg { width: 22px; height: 22px; display: block; transition: transform .25s ease; }
+.dock-more { display: grid; gap: 6px; min-width: 0; animation: unfold .22s ease; }
+@keyframes unfold { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* Minimised: only the four tool icons stay, so the dessert and the plate are in full view */
+.stage.is-min .dock { width: auto; }
+.stage.is-min .dock-more, .stage.is-min .hint, .stage.is-min .settings, .stage.is-min .settings-btn { display: none; }
+.stage.is-min .tool span { display: none; }
+.stage.is-min .tool { padding: 8px 10px; flex: none; }
+.stage.is-min .min-btn svg { transform: rotate(180deg); }
+.stage.is-min .flavor-card { width: auto; padding: 10px 12px; grid-template-columns: auto auto auto; gap: 12px; }
+.stage.is-min .flavor-card .eyebrow, .stage.is-min .flavor-card .meta { display: none; }
+.stage.is-min .flavor-card h3 { font-size: 14px; }
+.stage.is-min .flavor-card .btn { grid-column: auto; margin: 0; padding: 7px 12px; font-size: 13px; }
+.stage.is-min .readout { opacity: .55; }
+.dock, .flavor-card, .readout { transition: opacity .25s ease; }
+@media (prefers-reduced-motion: reduce) { .dock-more { animation: none; } .min-btn svg { transition: none; } }
+.settings-btn svg { width: 22px; height: 22px; display: block; }
+.hint { font-size: 13.5px; color: var(--ink-soft); padding: 0 6px; min-height: 1.4em; text-align: right; text-shadow: 0 1px 0 color-mix(in srgb, var(--bg) 60%, transparent); }
+
+.settings {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 16px; box-shadow: var(--shadow);
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px;
+}
+.settings label.range { display: grid; gap: 4px; font-size: 13px; font-weight: 600; }
+.settings .range-head { display: flex; justify-content: space-between; }
+.settings .range-ends { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--ink-soft); font-weight: 500; }
+.settings input[type="range"] { width: 100%; accent-color: var(--accent); }
+.settings .checks { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13.5px; align-items: center; }
+.settings .checks label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.settings .row-btns { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.settings .row-btns .btn { padding: 8px 14px; font-size: 13.5px; }
+
+.readout {
+  position: absolute; z-index: 2; left: var(--edge); bottom: 26px;
+  display: flex; gap: 0; border-top: 1px solid color-mix(in srgb, var(--ink) 25%, transparent); padding-top: 10px;
+}
+.readout div { padding-right: 22px; margin-right: 22px; border-right: 1px solid color-mix(in srgb, var(--ink) 15%, transparent); }
+.readout div:last-child { border-right: 0; }
+.readout dt { font: 500 10px/1.4 var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
+.readout dd { margin: 2px 0 0; font: 500 17px var(--font-mono); font-variant-numeric: tabular-nums; }
+.readout dd small { font-size: 11px; color: var(--ink-soft); margin-left: 2px; }
+
+.fallback {
+  position: absolute; inset: 0; display: grid; place-items: center; z-index: 1; padding: 24px;
+}
+.fallback-inner { display: grid; justify-items: center; gap: 14px; text-align: center; max-width: 26rem; margin-left: 40%; }
+.fallback svg { width: min(340px, 70vw); height: auto; }
+.fallback p { margin: 0; color: var(--ink-soft); font-size: 14.5px; }
+
+/* ---------- menu ---------- */
+section.block { padding-block: clamp(56px, 8vw, 96px); }
+.section-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; flex-wrap: wrap; margin-bottom: 28px; }
+.section-head h2 { font: 400 clamp(36px, 4.6vw, 58px)/1 var(--font-display); }
+.section-head p { margin: 10px 0 0; color: var(--ink-soft); max-width: 34rem; }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  border: 1.5px solid var(--line); background: transparent; border-radius: 999px; padding: 8px 16px; cursor: pointer;
+  font-weight: 600; font-size: 14px; color: var(--ink-soft); transition: all .15s;
+}
+.chip:hover { border-color: var(--ink-soft); color: var(--ink); }
+.chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
+.card {
+  background: var(--surface); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column;
+  border: 1px solid var(--line); transition: transform .2s ease, box-shadow .2s ease;
+}
+.card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.card .art { aspect-ratio: 4 / 3; background: var(--surface-2); display: grid; place-items: center; max-width: 100%; }
+.card .art svg { width: 78%; height: auto; }
+.card .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+.card .tag { font: 500 10px/1.4 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); }
+.card h3 { font-size: 17px; font-weight: 700; line-height: 1.25; }
+.card p { margin: 0; font-size: 14px; color: var(--ink-soft); flex: 1; }
+.card .foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
+.card .price { font: 500 15px var(--font-mono); font-variant-numeric: tabular-nums; }
+.add {
+  border: 0; cursor: pointer; background: var(--ink); color: var(--bg); border-radius: 999px; padding: 8px 14px; font-weight: 600; font-size: 14px;
+  transition: transform .12s;
+}
+.add:active { transform: scale(0.95); }
+.stepper { display: inline-flex; align-items: center; border: 1.5px solid var(--ink); border-radius: 999px; }
+.stepper button { border: 0; background: transparent; width: 34px; height: 34px; cursor: pointer; font-size: 18px; font-weight: 600; border-radius: 999px; }
+.stepper button:hover { background: var(--surface-2); }
+.stepper output { min-width: 24px; text-align: center; font: 500 14px var(--font-mono); }
+
+/* ---------- how to order ---------- */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; counter-reset: step; list-style: none; margin: 0; padding: 0; }
+.steps li { border-top: 2px solid var(--ink); padding-top: 16px; }
+.steps li::before { counter-increment: step; content: "Paso " counter(step); font: 500 11px var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
+.steps h3 { font-size: 20px; margin: 8px 0 6px; }
+.steps p { margin: 0; color: var(--ink-soft); }
+
+.info { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.info div { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; min-width: 0; }
+.info dt { font: 500 11px var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
+.info dd { margin: 8px 0 0; font-size: 16px; font-weight: 600; }
+.info dd span { display: block; font-weight: 400; color: var(--ink-soft); font-size: 14px; }
+
+footer { border-top: 1px solid var(--line); padding-block: 36px 48px; color: var(--ink-soft); font-size: 14px; }
+footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; align-items: baseline; }
+footer .logo { font-size: 22px; color: var(--ink); }
+
+/* ---------- cart drawer ---------- */
+.scrim { position: fixed; inset: 0; background: rgba(20, 10, 24, 0.45); z-index: 40; opacity: 0; pointer-events: none; transition: opacity .25s; }
+.scrim.open { opacity: 1; pointer-events: auto; }
+.drawer {
+  position: fixed; z-index: 41; top: 0; right: 0; bottom: 0; width: min(440px, 100%);
+  background: var(--bg); border-left: 1px solid var(--line); display: flex; flex-direction: column;
+  transform: translateX(102%); transition: transform .32s cubic-bezier(.2,.8,.2,1);
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.drawer.open { transform: none; }
+@media (prefers-reduced-motion: reduce) { .drawer, .scrim { transition: none; } }
+.drawer-head { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+.drawer-head h2 { font: 400 30px/1 var(--font-display); }
+.icon-btn { border: 0; background: transparent; cursor: pointer; width: 40px; height: 40px; border-radius: 999px; display: grid; place-items: center; }
+.icon-btn:hover { background: var(--surface-2); }
+.drawer-body { overflow-y: auto; padding: 8px 20px 20px; flex: 1; }
+.empty { text-align: center; padding: 40px 10px; color: var(--ink-soft); }
+.empty strong { display: block; color: var(--ink); font-size: 18px; margin-bottom: 6px; }
+.line { display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.line .thumb { width: 56px; height: 56px; border-radius: 10px; background: var(--surface-2); display: grid; place-items: center; }
+.line .thumb svg { width: 46px; }
+.line .name { font-weight: 600; font-size: 15px; line-height: 1.3; min-width: 0; }
+.line .unit { font: 400 12px var(--font-mono); color: var(--ink-soft); }
+.line .right { display: grid; justify-items: end; gap: 6px; }
+.line .stepper button { width: 28px; height: 28px; font-size: 16px; }
+.totals { margin: 16px 0 0; display: grid; gap: 6px; }
+.totals div { display: flex; justify-content: space-between; font-size: 15px; }
+.totals dd, .totals dt { margin: 0; }
+.totals dd { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.totals .grand { font-size: 18px; font-weight: 700; border-top: 1px solid var(--line); padding-top: 10px; margin-top: 4px; }
+.free-note { font-size: 13px; color: var(--ok); margin: 6px 0 0; }
+fieldset { border: 0; padding: 0; margin: 22px 0 0; display: grid; gap: 12px; }
+legend { font: 500 11px var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 10px; }
+.field { display: grid; gap: 5px; font-size: 14px; font-weight: 600; }
+.field input, .field select, .field textarea {
+  border: 1.5px solid var(--line); background: var(--surface); border-radius: 10px; padding: 10px 12px; font-weight: 400; width: 100%;
+}
+.field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--accent); }
+.seg { display: grid; grid-template-columns: 1fr 1fr; border: 1.5px solid var(--line); border-radius: 12px; padding: 4px; gap: 4px; }
+.seg label { text-align: center; padding: 9px; border-radius: 9px; cursor: pointer; font-weight: 600; font-size: 14px; color: var(--ink-soft); }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label:has(input:checked) { background: var(--ink); color: var(--bg); }
+.seg label:has(input:focus-visible) { outline: 2.5px solid var(--accent); outline-offset: 1px; }
+.error { color: var(--accent); font-size: 13px; font-weight: 600; min-height: 1.2em; }
+.drawer-foot { border-top: 1px solid var(--line); padding: 16px 20px; display: grid; gap: 10px; background: var(--surface); }
+.drawer-foot .btn { width: 100%; padding: 15px; font-size: 16px; }
+.wa-note { font-size: 12.5px; color: var(--ink-soft); text-align: center; margin: 0; }
+.wa-note .mono { color: var(--ink); }
+.preview { margin-top: 18px; }
+.preview pre {
+  white-space: pre-wrap; word-break: break-word; background: var(--surface); border: 1px dashed var(--line); border-radius: 10px;
+  padding: 12px; font: 400 12.5px/1.5 var(--font-mono); margin: 8px 0 0; max-height: 220px; overflow: auto;
+}
+.preview-head { display: flex; justify-content: space-between; align-items: center; }
+.link-btn { border: 0; background: none; cursor: pointer; color: var(--accent); font-weight: 600; font-size: 13.5px; padding: 4px; }
+
+.toast {
+  position: fixed; z-index: 50; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  transform: translate(-50%, 140%); background: var(--ink); color: var(--bg); padding: 12px 18px; border-radius: 999px;
+  font-weight: 600; font-size: 14.5px; box-shadow: var(--shadow); transition: transform .3s cubic-bezier(.2,.9,.3,1.2);
+  max-width: calc(100% - 32px); text-align: center;
+}
+.toast.show { transform: translate(-50%, 0); }
+
+/* ---------- narrow screens ---------- */
+@media (max-width: 899px) {
+  .nav { display: none; }
+  .topbar .wrap { justify-content: space-between; }
+  .hero { display: flex; flex-direction: column; }
+  .hero-copy { position: static; transform: none; width: auto; padding: 28px var(--gutter) 8px; order: 0; }
+  .hero-copy h1 { font-size: clamp(44px, 12vw, 64px); margin: 10px 0 12px; }
+  .hero-copy p.lead { font-size: 16px; margin-bottom: 18px; }
+  .stage { order: 1; height: clamp(440px, 72vh, 640px); }
+  @supports (height: 1svh) { .stage { height: clamp(440px, 72svh, 640px); } }
+  .stage.is-min .dock { left: auto; }
+  /* 16px+ keeps iOS from zooming into the form */
+  .field input, .field select, .field textarea { font-size: 16px; }
+  /* on phones the product sits as a slim bar over the top of the stage, the dessert keeps the middle */
+  .flavor-card, .stage.is-min .flavor-card {
+    top: 10px; left: 12px; right: 12px; width: auto; padding: 8px 8px 8px 12px;
+    grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px;
+  }
+  .flavor-card .eyebrow, .flavor-card .meta { display: none; }
+  .flavor-card h3, .stage.is-min .flavor-card h3 { font-size: 14px; line-height: 1.2; }
+  .flavor-card .price { font-size: 14px; }
+  .flavor-card .btn, .stage.is-min .flavor-card .btn { grid-column: auto; margin: 0; padding: 9px 12px; font-size: 13px; }
+  .readout { left: 12px; bottom: 14px; padding-top: 6px; }
+  .readout div { padding-right: 12px; margin-right: 12px; }
+  .readout dd { font-size: 14px; }
+  .stage.is-min .readout { bottom: 22px; }
+  .dock { left: 12px; right: 12px; width: auto; bottom: 12px; }
+  .hint { text-align: center; }
+  .tool span, .flavor span { font-size: 11px; }
+  .settings { grid-template-columns: 1fr; }
+  .steps, .info { grid-template-columns: 1fr; }
+  .fallback-inner { margin-left: 0; }
+}
+@media (min-width: 600px) and (max-width: 899px) {
+  .flavor-card, .stage.is-min .flavor-card { left: auto; width: min(440px, calc(100% - 24px)); }
+}
+@media (max-width: 599px) {
+  .readout { display: none; }
+  /* two compact columns so the menu isn't one long list */
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .card .body { padding: 10px 12px 12px; gap: 4px; }
+  .card h3 { font-size: 15px; }
+  .card p { font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card .tag { font-size: 9px; letter-spacing: 0.06em; }
+  .card .foot { flex-wrap: wrap; gap: 8px; }
+  .card .price { font-size: 14px; }
+  .card .ctl { flex: 1 1 100%; display: flex; }
+  .card .add { width: 100%; }
+  .card .stepper { width: 100%; justify-content: space-between; }
+  .section-head { margin-bottom: 20px; }
+  .info div { padding: 14px; }
+}
+@media (max-width: 520px) {
+  .toppings { margin-left: 0; }
+  .opt-label { display: none; }
+  .cart-btn .label { display: none; }
+}
+
+/* ---------- touch screens ---------- */
+@media (pointer: coarse) {
+  .tool { min-height: 52px; }
+  .dessert, .topping { min-height: 40px; padding-block: 7px; }
+  .chip { padding: 10px 18px; }
+  .add { padding: 10px 16px; }
+  .stepper button { width: 40px; height: 40px; }
+  .min-btn, .settings-btn { min-width: 44px; }
+  .settings input[type="range"] { height: 32px; }
+  .icon-btn { width: 44px; height: 44px; }
+}
+@media (hover: none) {
+  .card:hover { transform: none; box-shadow: none; }
+  .tool:not([aria-checked="true"]):hover, .flavor:not([aria-checked="true"]):hover, .dessert:not([aria-checked="true"]):hover { background: transparent; color: var(--ink-soft); }
+  .chip:not([aria-pressed="true"]):hover, .topping:not([aria-pressed="true"]):hover { border-color: var(--line); color: var(--ink-soft); }
+  .min-btn:hover, .settings-btn:not([aria-expanded="true"]):hover { background: transparent; color: var(--ink-soft); }
+  .btn-ghost:hover { background: transparent; }
+}
+</style>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="logo" href="#inicio" aria-label="CakeNow!+ inicio">CakeNow!<sup>+</sup></a>
+    <nav class="nav" aria-label="Secciones">
+      <a href="#menu" data-filter-link="postres">Postres</a>
+      <a href="#menu" data-filter-link="comida">Comida</a>
+      <a href="#menu" data-filter-link="bebidas">Bebidas</a>
+      <a href="#como-pedir">Cómo pedir</a>
+    </nav>
+    <button class="cart-btn" id="cartBtn" type="button" aria-controls="cart" aria-expanded="false">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.4 10.2a2 2 0 0 1-2 1.8H8.4a2 2 0 0 1-2-1.8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+      <span class="label">Pedido</span>
+      <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <section class="hero" id="inicio" aria-label="Gelatina interactiva">
+    <div class="hero-copy">
+      <div class="eyebrow">Pastelería y cocina · Pedidos en el día</div>
+      <h1>Postres que <em>tiemblan.</em></h1>
+      <p class="lead">Gelatinas de molde, tortas, flanes y comida casera hechos esta mañana. Pedís por WhatsApp y te lo llevamos.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="#menu">Ver el menú</a>
+        <button class="btn btn-ghost" type="button" id="heroCart">Armar pedido</button>
+      </div>
+    </div>
+
+    <div class="stage is-min" id="stage">
+      <canvas id="jellyCanvas" data-tool="hand" aria-label="Gelatina en 3D: se puede estirar, cortar, sacar cucharadas o sacudir"></canvas>
+      <div class="fallback" id="fallback" hidden>
+        <div class="fallback-inner">
+          <svg viewBox="0 0 320 220" aria-hidden="true">
+            <ellipse cx="160" cy="192" rx="150" ry="20" fill="var(--plate)" stroke="var(--line)"/>
+            <path d="M58 186 C56 150 62 130 70 120 L250 120 C258 130 264 150 262 186 Z" fill="#e0204f"/>
+            <path d="M88 122 C88 96 96 84 104 78 L216 78 C224 84 232 96 232 122 Z" fill="#c8123f"/>
+            <path d="M118 80 C118 52 136 34 160 34 C184 34 202 52 202 80 Z" fill="#e0204f"/>
+            <path d="M92 130 C90 150 92 168 96 182 M128 128 C126 150 126 168 128 184 M160 128 V184 M192 128 C194 150 194 168 192 184 M228 130 C230 150 228 168 224 182" stroke="#a80d33" stroke-width="4" fill="none" opacity=".5"/>
+            <ellipse cx="140" cy="56" rx="14" ry="8" fill="#fff" opacity=".55"/>
+          </svg>
+          <p id="fallbackText">Para jugar con la gelatina en 3D, abrí la página en Chrome o Edge actualizados en una computadora o celular reciente.</p>
+        </div>
+      </div>
+
+      <aside class="flavor-card" id="flavorCard" aria-live="polite">
+        <div class="eyebrow">En el plato</div>
+        <div>
+          <h3 id="fcName">Gelatina de frutilla</h3>
+          <div class="meta" id="fcMeta">Molde clásico · 6 porciones</div>
+          <div class="meta" id="fcExtras" hidden></div>
+        </div>
+        <div class="price" id="fcPrice">$ 9.800</div>
+        <button class="btn btn-primary" type="button" id="fcAdd">Agregar al pedido</button>
+      </aside>
+
+      <dl class="readout" aria-label="Datos de la gelatina en vivo">
+        <div><dt>Porciones</dt><dd id="rPieces">1</dd></div>
+        <div><dt>Volumen</dt><dd><span id="rVolume">100,0</span><small>%</small></dd></div>
+        <div><dt>Temblor</dt><dd><span id="rEnergy">0,0</span><small>µJ</small></dd></div>
+        <div><dt>Peso</dt><dd>≈<span id="rMass">496</span><small>g</small></dd></div>
+      </dl>
+
+      <div class="dock" id="dock">
+        <div class="settings" id="settings" hidden>
+          <label class="range" for="firmness">
+            <span class="range-head"><span>Firmeza</span><output class="mono" id="firmnessOut">0,45</output></span>
+            <input type="range" id="firmness" min="0" max="1" step="0.01" value="0.45">
+            <span class="range-ends"><span>temblona</span><span>firme</span></span>
+          </label>
+          <label class="range" for="damping">
+            <span class="range-head"><span>Amortiguación</span><output class="mono" id="dampingOut">0,45</output></span>
+            <input type="range" id="damping" min="0" max="1" step="0.01" value="0.45">
+            <span class="range-ends"><span>viva</span><span>almibarada</span></span>
+          </label>
+          <div class="checks">
+            <label><input type="checkbox" id="slow"> Cámara lenta (¼)</label>
+            <label><input type="checkbox" id="showMesh"> Ver la malla</label>
+          </div>
+          <div class="row-btns">
+            <button class="btn btn-ghost" type="button" id="shakeBtn">Sacudir el plato</button>
+            <button class="btn btn-ghost" type="button" id="resetBtn">Gelatina nueva</button>
+          </div>
+        </div>
+        <div class="hint" id="hint" hidden></div>
+        <div class="dock-panel">
+        <div class="dock-row">
+          <div class="tools" role="radiogroup" aria-label="Herramienta">
+            <button class="tool" role="radio" aria-checked="true" data-tool="hand" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 11V5.5a1.5 1.5 0 0 1 3 0V10"/><path d="M11 9.5V4a1.5 1.5 0 0 1 3 0v6"/><path d="M14 10V5.5a1.5 1.5 0 0 1 3 0V12"/><path d="M17 9.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-7 7h-1.2a6 6 0 0 1-4.6-2.2L4 15.2a1.6 1.6 0 0 1 2.4-2.1L8 14.6V11"/></svg>
+              <span>Mano</span>
+            </button>
+            <button class="tool" role="radio" aria-checked="false" data-tool="knife" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17 15.5 4.5a2.8 2.8 0 0 1 4 4L12 16H8z"/><path d="m8 16-3.5 3.5"/><path d="M12 16 9 19"/></svg>
+              <span>Cuchillo</span>
+            </button>
+            <button class="tool" role="radio" aria-checked="false" data-tool="spoon" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="16" cy="8" rx="4" ry="5.2" transform="rotate(40 16 8)"/><path d="M13 11.5 4 20.5"/></svg>
+              <span>Cuchara</span>
+            </button>
+            <button class="tool" role="radio" aria-checked="false" data-tool="tap" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="2.5"/><path d="M7.5 8.5a6.4 6.4 0 0 0 0 9"/><path d="M16.5 8.5a6.4 6.4 0 0 1 0 9"/><path d="M4.5 5.5a10.6 10.6 0 0 0 0 15"/><path d="M19.5 5.5a10.6 10.6 0 0 1 0 15"/></svg>
+              <span>Golpe</span>
+            </button>
+          </div>
+          <button class="min-btn" id="dockToggle" type="button" aria-expanded="false" aria-controls="dockMore" title="Abrir el menú">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            <span class="sr-only" id="dockToggleLabel">Abrir el menú</span>
+          </button>
+          <button class="settings-btn" id="settingsBtn" type="button" aria-expanded="false" aria-controls="settings" title="Ajustes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+            <span class="sr-only">Ajustes</span>
+          </button>
+        </div>
+          <div class="dock-more" id="dockMore">
+          <div class="dessert-strip" role="radiogroup" aria-label="Postre">
+            <button class="dessert" role="radio" aria-checked="true" data-dessert="gelatina" type="button" style="--sw:#e3123d"><i class="swatch"></i><span>Gelatina</span></button>
+            <button class="dessert" role="radio" aria-checked="false" data-dessert="flan" type="button" style="--sw:#f0b445"><i class="swatch"></i><span>Flan</span></button>
+            <button class="dessert" role="radio" aria-checked="false" data-dessert="rogel" type="button" style="--sw:#e0b273"><i class="swatch"></i><span>Rogel</span></button>
+            <button class="dessert" role="radio" aria-checked="false" data-dessert="tiramisu" type="button" style="--sw:#9a6a43"><i class="swatch"></i><span>Tiramisú</span></button>
+            <button class="dessert" role="radio" aria-checked="false" data-dessert="chocotorta" type="button" style="--sw:#4a2c1d"><i class="swatch"></i><span>Chocotorta</span></button>
+            <button class="dessert" role="radio" aria-checked="false" data-dessert="cheesecake" type="button" style="--sw:#c9183f"><i class="swatch"></i><span>Cheesecake</span></button>
+            <button class="dessert" role="radio" aria-checked="false" data-dessert="lemonpie" type="button" style="--sw:#ffd93a"><i class="swatch"></i><span>Lemon pie</span></button>
+            <button class="dessert" role="radio" aria-checked="false" data-dessert="budin" type="button" style="--sw:#b8783a"><i class="swatch"></i><span>Budín de pan</span></button>
+            <button class="dessert" role="radio" aria-checked="false" data-dessert="marquise" type="button" style="--sw:#2e170e"><i class="swatch"></i><span>Marquise</span></button>
+            <button class="dessert" role="radio" aria-checked="false" data-dessert="brownie" type="button" style="--sw:#3a1f12"><i class="swatch"></i><span>Brownie con helado</span></button>
+          </div>
+          <div class="options-row">
+            <div class="flavors" id="flavorGroup" role="radiogroup" aria-label="Sabor">
+            <button class="flavor" role="radio" aria-checked="true" data-flavor="frutilla" type="button" style="--sw:#e3123d"><i class="swatch"></i><span>Frutilla</span></button>
+            <button class="flavor" role="radio" aria-checked="false" data-flavor="limon" type="button" style="--sw:#c9dd2e"><i class="swatch"></i><span>Limón</span></button>
+            <button class="flavor" role="radio" aria-checked="false" data-flavor="naranja" type="button" style="--sw:#ff8a1c"><i class="swatch"></i><span>Naranja</span></button>
+            <button class="flavor" role="radio" aria-checked="false" data-flavor="leche" type="button" style="--sw:#f3ece0"><i class="swatch"></i><span>Leche</span></button>
+          </div>
+            <div class="toppings" role="group" aria-label="Para acompañar">
+              <span class="opt-label">Para acompañar</span>
+              <button class="topping" type="button" data-topping="ddl" aria-pressed="false"><i class="swatch" style="--sw:#8b4a1c"></i>Dulce de leche</button>
+              <button class="topping" type="button" data-topping="crema" aria-pressed="false"><i class="swatch" style="--sw:#fbf6ec"></i>Crema</button>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block wrap" id="menu" aria-labelledby="menuTitle">
+    <div class="section-head">
+      <div>
+        <h2 id="menuTitle">Menú</h2>
+        <p>Todo sale de nuestra cocina el mismo día. Las gelatinas se desmoldan a pedido, así llegan firmes y brillantes.</p>
+      </div>
+      <div class="filters" role="group" aria-label="Filtrar el menú">
+        <button class="chip" type="button" data-filter="todo" aria-pressed="true">Todo</button>
+        <button class="chip" type="button" data-filter="postres" aria-pressed="false">Postres</button>
+        <button class="chip" type="button" data-filter="comida" aria-pressed="false">Comida</button>
+        <button class="chip" type="button" data-filter="bebidas" aria-pressed="false">Bebidas</button>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section class="block wrap" id="como-pedir" aria-labelledby="howTitle">
+    <div class="section-head"><h2 id="howTitle">Cómo pedir</h2></div>
+    <ol class="steps">
+      <li><h3>Elegí</h3><p>Sumá al pedido lo que quieras del menú. El pedido queda guardado aunque cierres la página.</p></li>
+      <li><h3>Completá tus datos</h3><p>Nombre, si querés envío o pasás a retirar, el horario y cómo vas a pagar.</p></li>
+      <li><h3>Mandalo por WhatsApp</h3><p>Se abre WhatsApp con el pedido ya escrito. Te confirmamos el horario en minutos.</p></li>
+    </ol>
+  </section>
+
+  <section class="block wrap" aria-label="Horarios y envíos" style="padding-top:0">
+    <dl class="info" id="info"></dl>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="logo">CakeNow!<sup>+</sup></span>
+    <span id="footerText"></span>
+  </div>
+</footer>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="cart" aria-label="Tu pedido" aria-hidden="true" inert>
+  <div class="drawer-head">
+    <h2>Tu pedido</h2>
+    <button class="icon-btn" type="button" id="cartClose" aria-label="Cerrar el pedido">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body">
+    <div id="cartLines"></div>
+    <form id="checkout" novalidate>
+      <dl class="totals" id="totals"></dl>
+      <fieldset>
+        <legend>Entrega</legend>
+        <div class="seg" role="radiogroup" aria-label="Forma de entrega">
+          <label><input type="radio" name="delivery" id="ck-envio" value="envio" checked> Envío</label>
+          <label><input type="radio" name="delivery" id="ck-retiro" value="retiro"> Retiro en el local</label>
+        </div>
+        <label class="field" for="ck-name">Nombre
+          <input id="ck-name" name="name" autocomplete="name" placeholder="Cómo te llamás">
+        </label>
+        <label class="field" for="ck-address" id="addressField">Dirección
+          <input id="ck-address" name="address" autocomplete="street-address" placeholder="Calle, número, piso">
+        </label>
+        <label class="field" for="ck-time">Horario
+          <select id="ck-time" name="time"></select>
+        </label>
+        <label class="field" for="ck-pay">Pago
+          <select id="ck-pay" name="pay">
+            <option>Efectivo</option>
+            <option>Transferencia</option>
+            <option>Mercado Pago (te mandamos el link)</option>
+          </select>
+        </label>
+        <label class="field" for="ck-notes">Comentarios
+          <textarea id="ck-notes" name="notes" rows="2" placeholder="Ej.: sin nueces, tocar timbre 2B"></textarea>
+        </label>
+      </fieldset>
+      <div class="preview">
+        <div class="preview-head"><span class="eyebrow">Mensaje que se envía</span><button class="link-btn" type="button" id="copyMsg">Copiar</button></div>
+        <pre id="msgPreview"></pre>
+      </div>
+    </form>
+  </div>
+  <div class="drawer-foot">
+    <div class="error" id="ckError" role="alert"></div>
+    <a class="btn btn-primary" id="sendWa" href="#" target="_blank" rel="noopener">Enviar pedido por WhatsApp</a>
+    <p class="wa-note">Se abre WhatsApp con el mensaje listo para <span class="mono" id="waNumber"></span>.</p>
+  </div>
+</aside>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
