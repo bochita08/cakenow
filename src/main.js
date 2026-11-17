@@ -257,8 +257,11 @@ function bindShop() {
       toast('Mensaje seleccionado: copialo con Ctrl+C');
     }
   });
-  const num = CONFIG.whatsapp.replace(/^549(\d{2})(\d{4})(\d{4})$/, '+54 9 $1 $2-$3');
-  $('#waNumber').textContent = CONFIG.whatsappIsExample ? `${num} (número de prueba)` : num;
+  if (CONFIG.whatsapp) {
+    $('#waNumber').textContent = CONFIG.whatsapp.replace(/^549(\d{2})(\d{4})(\d{4})$/, '+54 9 $1 $2-$3');
+  } else {
+    $('#waNumber').closest('.wa-note').textContent = 'Se abre WhatsApp con el mensaje listo para mandar.';
+  }
 
   $('#info').innerHTML = `
     <div><dt>Horario</dt><dd>${CONFIG.hours}<span>${CONFIG.hoursNote}</span></dd></div>

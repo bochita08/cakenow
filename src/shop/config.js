@@ -2,8 +2,8 @@
 export const CONFIG = {
   name: 'CakeNow!+',
   // Número de WhatsApp en formato internacional, sin "+" ni espacios (ej.: 5491123456789).
-  whatsapp: '5491100000000',
-  whatsappIsExample: true,
+  // Vacío = demo: WhatsApp se abre con el mensaje listo y el cliente elige a quién mandarlo.
+  whatsapp: '',
   currency: 'ARS',
   deliveryFee: 2500,
   freeDeliveryFrom: 40000,
